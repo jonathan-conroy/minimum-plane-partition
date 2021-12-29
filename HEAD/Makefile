@@ -4,6 +4,7 @@ MAKEFILE      = Makefile
 
 CXX           = /usr/local/opt/llvm/bin/clang++ #g++
 CXXFLAGS      = -pipe -fopenmp -O2 -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
+INCPATH 	  = -I/usr/local/include/
 DEL_FILE      = rm -f
 LINK          = /usr/local/opt/llvm/bin/clang++ #g++
 LFLAGS        = -Wl#,-O1
@@ -17,28 +18,33 @@ OBJECTS_DIR   = ./
 
 SRC           = ./src
 
-SOURCES       = $(SRC)/util/gfile.cpp \
+SOURCES  = $(SRC)/util/gfile.cpp \
 		$(SRC)/graphe.cpp \
 		$(SRC)/head.cpp \
 		$(SRC)/main.cpp \
 		$(SRC)/solution.cpp \
 		$(SRC)/tabouSearch.cpp
+
 OBJECTS       = gfile.o \
 		graphe.o \
 		head.o \
-		main.o \
 		solution.o \
 		tabouSearch.o
+
 TARGET        = head
 
 
-$(TARGET):  $(OBJECTS)
-	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(OBJCOMP) $(LIBS)
+$(TARGET):  $(OBJECTS) main.o
+	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(SRC)/main.cpp $(OBJCOMP) $(LIBS)
+
+run_all:  $(OBJECTS) run_all.o
+	$(LINK) $(LFLAGS) -o run_all $(INCPATH) $(OBJECTS) $(SRC)/run_all.cpp $(OBJCOMP) $(LIBS)
+
 
 all: Makefile $(TARGET)
 
 clean:
-	-$(DEL_FILE) $(OBJECTS) $(TARGET)
+	-$(DEL_FILE) $(OBJECTS) $(TARGET) run_all
 	-$(DEL_FILE) *~ core *.core
 
 
@@ -46,9 +52,6 @@ clean:
 
 gfile.o: $(SRC)/util/gfile.cpp $(SRC)/util/gfile.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gfile.o $(SRC)/util/gfile.cpp
-
-#arg.o: $(SRC)/arg.cpp $(SRC)/arg.h
-#	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o arg.o $(SRC)/arg.cpp
 
 graphe.o: $(SRC)/graphe.cpp $(SRC)/graphe.h \
 		$(SRC)/util/gfile.h
@@ -62,6 +65,13 @@ head.o: $(SRC)/head.cpp $(SRC)/util/gfile.h \
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o head.o $(SRC)/head.cpp
 
 main.o: $(SRC)/main.cpp $(SRC)/graphe.h \
+		$(SRC)/util/gfile.h \
+		$(SRC)/head.h \
+		$(SRC)/tabouSearch.h \
+		$(SRC)/solution.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o $(SRC)/main.cpp
+
+run_all.o: $(SRC)/run_all.cpp $(SRC)/graphe.h \
 		$(SRC)/util/gfile.h \
 		$(SRC)/head.h \
 		$(SRC)/tabouSearch.h \
