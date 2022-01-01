@@ -66,6 +66,7 @@ long long Area2(Point a, Point b, Point c)
 #include <fstream>
 #include <string>
 #include <filesystem>
+#include <sstream>
 
 void constructGraph(std::string instanceName, bool overwrite,
                     std::string instanceFolderPath, std::string outputPath);
@@ -117,6 +118,11 @@ void constructGraph(std::string instanceName, bool overwrite,
     std::vector<int> edges1 = instanceJSON["edge_i"].get<std::vector<int> >();
     std::vector<int> edges2 = instanceJSON["edge_j"].get<std::vector<int> >();
 
+    if (edges1.size() > 10000) {
+        std::cout << "Too large... exiting early" << std::endl;
+        return;
+    }
+
     // Construct a list of segments
     int numSegments = edges1.size();
     std::vector<std::vector<int> > segments(numSegments);
@@ -127,12 +133,13 @@ void constructGraph(std::string instanceName, bool overwrite,
     // Naive O(n^2) approach to finding intersections:
     //     check every pair and record any intersections found
     long long numEdges = 0;
-    std::string output = "";
+    std::ofstream output(fileOutput);
 
     for (int i = 0; i < numSegments; i++) {
         if (i % 1000 == 0)
             std::cout << "    Processing " << i << std::endl;
 
+        std::string currOutput = "";
         Point seg1_start = {segments[i][0], segments[i][1]};
         Point seg1_end = {segments[i][2], segments[i][3]};
 
@@ -141,18 +148,26 @@ void constructGraph(std::string instanceName, bool overwrite,
             Point seg2_end = {segments[j][2], segments[j][3]};
             bool curr_intersect = intersects(seg1_start, seg1_end, seg2_start, seg2_end);
             if (curr_intersect) {
-                output += ("e " + std::to_string(i+1) + " " + std::to_string(j+1) + "\n");
-                output += ("e " + std::to_string(j+1) + " " + std::to_string(i+1) + "\n");
+                currOutput += ("e " + std::to_string(i+1) + " " + std::to_string(j+1) + "\n");
+                currOutput += ("e " + std::to_string(j+1) + " " + std::to_string(i+1) + "\n");
                 numEdges += 2;
             }
         }
+
+        // Periodically write output to file to limit memory usage
+        output << currOutput;
     }
 
-    // Write output to file
-    std::cout << "Writing output" << std::endl;
-    output = "p edge " + std::to_string(numSegments) + " " + std::to_string(numEdges) + "\n" + output;
-    std::ofstream out(fileOutput);
-    out << output;
-
+    // Prepend edge count to file
+    // Adapted from https://stackoverflow.com/a/11108352
+    std::cout << "Writing edge count data output" << std::endl;
+    output.close();
+    std::fstream existingStream(fileOutput.c_str());
+    std::stringstream fileData;
+    fileData << "p edge " << std::to_string(numSegments) << " " << std::to_string(numEdges) << std::endl;
+    fileData << existingStream.rdbuf();
+    existingStream.close();
+    existingStream.open(fileOutput.c_str(), std::fstream::out | std::fstream::trunc);
+    existingStream << fileData.rdbuf();
 
 }
