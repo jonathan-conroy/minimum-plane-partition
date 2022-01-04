@@ -17,6 +17,7 @@
 #include "util/gfile.h"
 
 bool kColor(char graphName[80], int nbColor, std::string instanceName);
+void writeJsonColoring(Head* solver, std::string instanceName, std::string outputFilename);
 void solveInstance(std::string instanceName);
 
 int main(int argc, char **argv) {
@@ -43,7 +44,7 @@ void solveInstance(std::string instanceName) {
     int bestColor = numVert;
     if (numSeg < numVert)
         bestColor = numSeg;
-    bestColor = 35;
+    bestColor = 37;
 
     std::cout << "Finding " + std::to_string(bestColor) + "-coloring." << std::endl;
     while (kColor(graphName, bestColor, instanceName)) {
@@ -55,10 +56,7 @@ void solveInstance(std::string instanceName) {
 bool kColor(char graphName[80], int nbColor, std::string instanceName) {
     std::cout << "Entering kColor" << std::endl;
     Graph g(graphName);
-    char outputFile[255];
-    strcpy(outputFile, ("../output/" + instanceName + "_HEAD_"  + std::to_string(nbColor) + ".txt").c_str());
-    char previousOutputFile[255];
-    strcpy(previousOutputFile, ("../output/" + instanceName + "_HEAD_"  + std::to_string(nbColor + 1) + ".txt").c_str());
+    std::string outputFilename = "../output/" + instanceName + "_HEAD_"  + std::to_string(nbColor) + ".json";
     int nbRun = 10;
 
     long long nbLocalSearch = 30000;
@@ -108,14 +106,32 @@ bool kColor(char graphName[80], int nbColor, std::string instanceName) {
         // Save successful coloring
         if (solver->bestSol.nbEdgesConflict==0) {
             std::cout << "    Attempting to save coloring (run " << std::to_string(runId) << ")" << std::endl;
-            if (strlen(outputFile) != 0)
-                solver->saveBestColoring(outputFile);
-
-            // TODO: if previousOutputFile exists, remove it
+            if (outputFilename.length() != 0) {
+                writeJsonColoring(solver, instanceName, outputFilename);
+                // TODO: if previousOutputFile exists, remove it
+            }
             return true;
-            
         }
     }
     return false;
 
+}
+
+void writeJsonColoring(Head* solver, std::string instanceName, std::string outputFilename) {
+    nlohmann::json output;
+
+    // Record colors
+    nlohmann::json colorArr = nlohmann::json::array();
+    for (int i = 0; i < solver->graph->nbSommets; i++) {
+      colorArr.push_back(solver->bestSol.tColor[i]);
+    }
+    output["colors"] = colorArr;
+
+    // Record metadata
+    output["num_colors"] = solver->nbColors;
+    output["instance"] = instanceName.c_str();
+    output["type"] = "Solution_CGSHOP2022";
+
+    std::ofstream outputFile(outputFilename);
+    outputFile << output;
 }
