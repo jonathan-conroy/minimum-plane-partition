@@ -80,7 +80,7 @@ void Solution::computeConflicts(int tConflicts[]){
 
 	for (int i=0; i<nbSommets; i++) {
 		for (int j=i; j<nbSommets; j++) {
-			if (graph->tConnect[i][j] && tColor[i]==tColor[j]) {
+			if (graph->isEdge(i, j) && tColor[i]==tColor[j]) {
 				tConflicts[i]++;
 				tConflicts[j]++;
 				nbEdgesConflict++;
@@ -105,7 +105,7 @@ int Solution::computeConflicts(){
 
 	for (int i=0; i<nbSommets-1; i++) {
 		for (int j=i+1; j<nbSommets; j++) {
-			if (graph->tConnect[i][j] && tColor[i]==tColor[j]) {
+			if (graph->isEdge(i, j) && tColor[i]==tColor[j]) {
 				nbEdgesConflict++;
 				if (!vNodeConf[i])
 					nbNodesConflict++;

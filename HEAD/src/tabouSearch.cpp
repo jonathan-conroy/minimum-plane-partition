@@ -180,9 +180,10 @@ void TabouSearch::initTables(){
       tNewConflitsWithColor[i][j]=-nbCurrentConflict;
     }
 
-    int nbVoisins=graph->tVoisins[i].size();
+    vector<int> neighbors = graph->getNeighbors(i);
+    int nbVoisins = neighbors.size();
     for (int j=0; j<nbVoisins; j++) {
-      tNewConflitsWithColor[i][currentSol.tColor[graph->tVoisins[i][j]]]++;
+      tNewConflitsWithColor[i][currentSol.tColor[neighbors[j]]]++;
     }
   }
 
@@ -311,9 +312,10 @@ void TabouSearch::updateTables(int node, int color){
 
   tTabou[node][prevColor]=(int) (nbIterations + rd + lambda*currentSol.nbNodesConflict);
 
-  int nbVoisins=graph->tVoisins[node].size();
+  vector<int> neighbors = graph->getNeighbors(node);
+  int nbVoisins = neighbors.size();
   for (int i=0; i<nbVoisins; i++) {
-    int indiceSommet=graph->tVoisins[node][i];
+    int indiceSommet= neighbors[i];
 
     /// répercution sur les voisins
     if (currentSol.tColor[indiceSommet] == prevColor) {
